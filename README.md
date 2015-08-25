@@ -22,6 +22,5 @@ See `<timestamp>.log` and `<vmid>.dump` files for output produced by `com.nastel
 See `config/tnt4j.properties` for TNT4J configuration: factories, formatters, listeners, etc.
 
 # Project Dependencies
-JESL requires the following:
 * JDK 1.7+
 * TNT4J (https://github.com/Nastel/TNT4J)
