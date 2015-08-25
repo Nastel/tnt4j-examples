@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nastel.jkool.tnt4j.examples;
+package com.nastel.jkool.tnt4j.samples;
 
 import java.io.File;
 import java.io.IOException;

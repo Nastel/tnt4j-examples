@@ -9,13 +9,13 @@
   <!-- Import default properties for jKool builds --> 
   <import file="${root}/build-properties.xml"/>
 
-  <property name="package"   value="com.nastel.jkool.tnt4j.examples.*"/>
-  <property name="docpkg"    value="com.nastel.jkool.tnt4j.examples.*"/>
+  <property name="package"   value="com.nastel.jkool.tnt4j.samples.*"/>
+  <property name="docpkg"    value="com.nastel.jkool.tnt4j.samples.*"/>
   <property name="src"       value="src"/>
   <property name="lib"       value="lib"/>
   <property name="classes"   value="classes"/>
   <property name="doc"       value="${project-build}/doc"/>
-  <property name="jar"       value="${project-build}/tnt4j-examples.jar"/>
+  <property name="jar"       value="${project-build}/tnt4j-samples.jar"/>
 
   <target name="init">
     <tstamp/>
@@ -87,7 +87,7 @@
 
   <target name="tnt4j-examples" depends="doc" description="build package for distribution">
     <echo message="Deleting old archives" level="info"/>
-    <delete dir="${project-build}" includes="*-all.jar,*-all.zip"/>
+    <delete dir="${project-build}" includes="*.jar"/>
     
     <echo message="Copying README and LICENSE info" level="info"/>
 	<copy todir="${project-build}">
@@ -100,7 +100,6 @@
    <echo message="Copying TNT4J configuration" level="info"/>
 	<copy todir="${project-build}/config">
 		<fileset dir="${root}/config">
-			<include name="log4j.properties"/>
 			<include name="tnt4j.properties"/>
 		</fileset>
 	</copy>
