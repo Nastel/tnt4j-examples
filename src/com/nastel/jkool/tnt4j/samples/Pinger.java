@@ -22,6 +22,12 @@ import com.nastel.jkool.tnt4j.core.Activity;
 import com.nastel.jkool.tnt4j.core.ActivityListener;
 import com.nastel.jkool.tnt4j.core.PropertySnapshot;
 
+/**
+ * Simple application that generates an activity ping based on a predefined interval.
+ * Developer can enrich activities before activities are logged to TNT4J event sink.
+ * 
+ * @version $Revision: 1 $
+ */
 public class Pinger {
 	/**
 	 * Run TNT4J Pinger application to generate scheduled activity ping
