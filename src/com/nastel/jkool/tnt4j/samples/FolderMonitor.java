@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
@@ -50,19 +51,22 @@ import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
  * @version $Revision: 1 $
  */
 public class FolderMonitor {
-	private static final EventSink logger = DefaultEventSinkFactory.defaultEventSink(FolderMonitor.class);
+	private static final String PROP_FILE_EXT = System.getProperty("tnt4j.folder.monitor.property.ext", ".properties;.conf");
 	
+	private static final EventSink logger = DefaultEventSinkFactory.defaultEventSink(FolderMonitor.class);
+
 	public static void main(String[] args) throws InterruptedException, IOException {
 		if (args.length < 1) {
-			System.out.println("Usage: folder");
+			System.out.println("Usage: folder-list");
 			System.exit(-1);
 		}
 		try {
-			Path pathToWatch = FileSystems.getDefault().getPath(args[0]);
-			FolderWatcher monitor = new FolderWatcher(FolderMonitor.class.getName(), pathToWatch);
-			Thread monitorThread = new Thread(monitor);
-			monitorThread.start();
-			monitorThread.join();
+			for (int i = 0; i < args.length; i++) {
+				Path pathToWatch = FileSystems.getDefault().getPath(args[i]);
+				FolderWatcher monitor = new FolderWatcher(FolderMonitor.class.getName() + "." + pathToWatch.toFile().getName(), PROP_FILE_EXT, pathToWatch);
+				Thread monitorThread = new Thread(monitor);
+				monitorThread.start();
+			}
 		} catch (Throwable ex) {
 			logger.log(OpLevel.ERROR, "Unable to watch: {0}", args[0], ex);
 		}
@@ -70,17 +74,17 @@ public class FolderMonitor {
 }
 
 class PathEventFilter implements SinkEventFilter {
-	
+
 	FolderWatcher watcher;
-	
+
 	PathEventFilter(FolderWatcher fw) {
 		watcher = fw;
 	}
-	
+
 	@Override
-    public boolean filter(EventSink sink, TrackingEvent event) {
-		Object [] args = event.getMessageArgs();
-		for (int i=0; args != null && i < args.length; i++) {
+	public boolean filter(EventSink sink, TrackingEvent event) {
+		Object[] args = event.getMessageArgs();
+		for (int i = 0; args != null && i < args.length; i++) {
 			if (args[i] instanceof Path) {
 				Path path = (Path) args[i];
 				File file = path.toFile();
@@ -88,7 +92,7 @@ class PathEventFilter implements SinkEventFilter {
 				event.getOperation().setResource(resource);
 				boolean exists = file.exists();
 				if (exists) {
-					PropertySnapshot snap = new PropertySnapshot("FileSystem", file.getName());
+					PropertySnapshot snap = new PropertySnapshot("FileSystem", file.getPath());
 					snap.add("Exists", file.exists(), ValueTypes.VALUE_TYPE_FLAG);
 					snap.add("CanRead", file.canRead(), ValueTypes.VALUE_TYPE_FLAG);
 					snap.add("CanWrite", file.canWrite(), ValueTypes.VALUE_TYPE_FLAG);
@@ -106,38 +110,50 @@ class PathEventFilter implements SinkEventFilter {
 				}
 			}
 		}
-	    return true;
-    }
+		return true;
+	}
 
 	@Override
-    public boolean filter(EventSink sink, TrackingActivity activity) {
-	    return true;
-    }
+	public boolean filter(EventSink sink, TrackingActivity activity) {
+		return true;
+	}
 
 	@Override
-    public boolean filter(EventSink sink, Snapshot snapshot) {
-	    return true;
-    }
+	public boolean filter(EventSink sink, Snapshot snapshot) {
+		return true;
+	}
 
 	@Override
-    public boolean filter(EventSink sink, long ttl, Source source, OpLevel level, String msg, Object... args) {
-	    return true;
-    }
+	public boolean filter(EventSink sink, long ttl, Source source, OpLevel level, String msg, Object... args) {
+		return true;
+	}
 }
 
 // Simple class to watch directory events.
 class FolderWatcher implements Runnable {
 	private Path folder;
 	TrackingLogger logger;
+	String [] extList;
 	ConcurrentHashMap<String, Properties> PROP_TABLE = new ConcurrentHashMap<String, Properties>();
-	
-	public FolderWatcher(String name, Path path) throws IOException {
+
+	public FolderWatcher(String name, String exts, Path path) throws IOException {
 		this.folder = path;
+		extList = exts.split(";");
 		logger = TrackingLogger.getInstance(name);
 		logger.addSinkEventFilter(new PathEventFilter(this));
-		logger.open();
 	}
 
+	private boolean isPropertyFile(File file) {
+		boolean flag = false;
+		if (!file.isFile()) return flag;
+		
+		for (int i=0; i < extList.length; i++) {
+			flag = file.getName().endsWith(extList[i]);
+			if (flag) break;
+		}
+		return flag;
+	}
+	
 	private void handleEvent(WatchEvent<?> event) throws IOException {
 		Kind<?> kind = event.kind();
 		if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
@@ -153,19 +169,20 @@ class FolderWatcher implements Runnable {
 	}
 
 	protected void trackPropertyChanges(File file, TrackingEvent event) throws IOException {
-		if (file.getName().endsWith(".properties")) {
-			Properties before = PROP_TABLE.get(file.getName());
+		if (isPropertyFile(file)) {
+			Properties before = PROP_TABLE.get(file.getPath());
 			Properties after = loadPropFile(file);
 			if (before != null && after != null) {
-				compareProperties(file.getName(), before, after, event);
+				compareProperties(file.getPath(), before, after, event);
 			}
-			PROP_TABLE.put(file.getName(), after);				
-		}		
-    }
+			PROP_TABLE.put(file.getPath(), after);
+		}
+	}
 
 	@Override
 	public void run() {
 		try {
+			logger.open();
 			loadPropFiles();
 			WatchService watchService = folder.getFileSystem().newWatchService();
 			folder.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
@@ -191,7 +208,7 @@ class FolderWatcher implements Runnable {
 		} catch (Throwable ex) {
 			logger.error("Unable to watch: {0}", folder, ex);
 			return;
-		} finally {		
+		} finally {
 			logger.info("Stopped watching: {0}", folder);
 			logger.close();
 		}
@@ -201,37 +218,37 @@ class FolderWatcher implements Runnable {
 		File dir = folder.toFile();
 		if (dir.isDirectory()) {
 			File[] files = dir.listFiles();
-			for (int i=0; i < files.length; i++){
+			for (int i = 0; i < files.length; i++) {
 				File file = files[i];
 				Properties prop = loadPropFile(file);
 				if (prop != null) {
-					logger.info("Loaded properties: file={0}, prop.count={1}", file, prop.size());
-					PROP_TABLE.put(file.getName(), prop);
+					logger.info("Loaded properties: file={0}, type={1}, prop.count={2}", file.getPath(), Files.probeContentType(file.toPath()), prop.size());
+					PROP_TABLE.put(file.getPath(), prop);
 				}
 			}
 		}
 	}
-	
+
 	private Properties loadPropFile(File file) throws IOException {
-		if (file.isFile() && file.getName().endsWith(".properties")) {
+		if (isPropertyFile(file)) {
 			Properties prop = new Properties();
-			InputStream in  = new FileInputStream(file);
+			InputStream in = new FileInputStream(file);
 			prop.load(in);
 			in.close();
-			return prop;		
+			return prop;
 		}
 		return null;
 	}
-	
+
 	private TrackingEvent compareProperties(String fileName, Properties before, Properties after, TrackingEvent event) {
 		PropertySnapshot changes = new PropertySnapshot("ContentsChanged", fileName);
 		PropertySnapshot added = new PropertySnapshot("ContentsAdded", fileName);
 		PropertySnapshot removed = new PropertySnapshot("ContentsRemoved", fileName);
-		
+
 		HashSet<Object> all = new HashSet<Object>();
 		all.addAll(before.keySet());
 		all.addAll(after.keySet());
-		
+
 		for (Object key : all) {
 			String beforeValue = before.getProperty(key.toString());
 			String afterValue = after.getProperty(key.toString());
@@ -240,9 +257,9 @@ class FolderWatcher implements Runnable {
 					changes.add(key, beforeValue + "=>" + afterValue);
 				}
 			} else if (beforeValue == null && afterValue != null) {
-				added.add(key, after.getProperty(key.toString()));				
+				added.add(key, after.getProperty(key.toString()));
 			} else if (beforeValue != null && afterValue == null) {
-				removed.add(key, before.getProperty(key.toString()));								
+				removed.add(key, before.getProperty(key.toString()));
 			}
 		}
 
@@ -257,9 +274,8 @@ class FolderWatcher implements Runnable {
 		}
 		return event;
 	}
-	
-	
+
 	public static boolean equal(final Object obj1, final Object obj2) {
-	    return obj1 == obj2 || (obj1 != null && obj1.equals(obj2));
+		return obj1 == obj2 || (obj1 != null && obj1.equals(obj2));
 	}
 }
