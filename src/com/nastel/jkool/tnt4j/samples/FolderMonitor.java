@@ -16,7 +16,10 @@
 package com.nastel.jkool.tnt4j.samples;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
@@ -24,6 +27,9 @@ import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.WatchKey;
 import java.nio.file.WatchService;
+import java.util.HashSet;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.nastel.jkool.tnt4j.TrackingLogger;
 import com.nastel.jkool.tnt4j.core.OpLevel;
@@ -64,6 +70,13 @@ public class FolderMonitor {
 }
 
 class PathEventFilter implements SinkEventFilter {
+	
+	FolderWatcher watcher;
+	
+	PathEventFilter(FolderWatcher fw) {
+		watcher = fw;
+	}
+	
 	@Override
     public boolean filter(EventSink sink, TrackingEvent event) {
 		Object [] args = event.getMessageArgs();
@@ -86,6 +99,10 @@ class PathEventFilter implements SinkEventFilter {
 					snap.add("UsableSpace", file.getUsableSpace(), ValueTypes.VALUE_TYPE_SIZE_BYTE);
 					snap.add("LastModified", file.lastModified(), ValueTypes.VALUE_TYPE_AGE_MSEC);
 					event.getOperation().addSnapshot(snap);
+					try {
+						watcher.trackPropertyChanges(file, event);
+					} catch (IOException e) {
+					}
 				}
 			}
 		}
@@ -112,15 +129,16 @@ class PathEventFilter implements SinkEventFilter {
 class FolderWatcher implements Runnable {
 	private Path folder;
 	TrackingLogger logger;
+	ConcurrentHashMap<String, Properties> PROP_TABLE = new ConcurrentHashMap<String, Properties>();
 	
 	public FolderWatcher(String name, Path path) throws IOException {
 		this.folder = path;
 		logger = TrackingLogger.getInstance(name);
-		logger.addSinkEventFilter(new PathEventFilter());
+		logger.addSinkEventFilter(new PathEventFilter(this));
 		logger.open();
 	}
 
-	private void handleEvent(WatchEvent<?> event) {
+	private void handleEvent(WatchEvent<?> event) throws IOException {
 		Kind<?> kind = event.kind();
 		if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
 			Path path = folder.resolve((Path) event.context());
@@ -134,9 +152,21 @@ class FolderWatcher implements Runnable {
 		}
 	}
 
+	protected void trackPropertyChanges(File file, TrackingEvent event) throws IOException {
+		if (file.getName().endsWith(".properties")) {
+			Properties before = PROP_TABLE.get(file.getName());
+			Properties after = loadPropFile(file);
+			if (before != null && after != null) {
+				compareProperties(file.getName(), before, after, event);
+			}
+			PROP_TABLE.put(file.getName(), after);				
+		}		
+    }
+
 	@Override
 	public void run() {
 		try {
+			loadPropFiles();
 			WatchService watchService = folder.getFileSystem().newWatchService();
 			folder.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
 			        StandardWatchEventKinds.ENTRY_DELETE);
@@ -165,5 +195,71 @@ class FolderWatcher implements Runnable {
 			logger.info("Stopped watching: {0}", folder);
 			logger.close();
 		}
+	}
+
+	private void loadPropFiles() throws FileNotFoundException, IOException {
+		File dir = folder.toFile();
+		if (dir.isDirectory()) {
+			File[] files = dir.listFiles();
+			for (int i=0; i < files.length; i++){
+				File file = files[i];
+				Properties prop = loadPropFile(file);
+				if (prop != null) {
+					logger.info("Loaded properties: file={0}, prop.count={1}", file, prop.size());
+					PROP_TABLE.put(file.getName(), prop);
+				}
+			}
+		}
+	}
+	
+	private Properties loadPropFile(File file) throws IOException {
+		if (file.isFile() && file.getName().endsWith(".properties")) {
+			Properties prop = new Properties();
+			InputStream in  = new FileInputStream(file);
+			prop.load(in);
+			in.close();
+			return prop;		
+		}
+		return null;
+	}
+	
+	private TrackingEvent compareProperties(String fileName, Properties before, Properties after, TrackingEvent event) {
+		PropertySnapshot changes = new PropertySnapshot("ContentsChanged", fileName);
+		PropertySnapshot added = new PropertySnapshot("ContentsAdded", fileName);
+		PropertySnapshot removed = new PropertySnapshot("ContentsRemoved", fileName);
+		
+		HashSet<Object> all = new HashSet<Object>();
+		all.addAll(before.keySet());
+		all.addAll(after.keySet());
+		
+		for (Object key : all) {
+			String beforeValue = before.getProperty(key.toString());
+			String afterValue = after.getProperty(key.toString());
+			if (beforeValue != null && afterValue != null) {
+				if (!equal(beforeValue, afterValue)) {
+					changes.add(key, beforeValue + "=>" + afterValue);
+				}
+			} else if (beforeValue == null && afterValue != null) {
+				added.add(key, after.getProperty(key.toString()));				
+			} else if (beforeValue != null && afterValue == null) {
+				removed.add(key, before.getProperty(key.toString()));								
+			}
+		}
+
+		if (changes.size() > 0) {
+			event.getOperation().addSnapshot(changes);
+		}
+		if (added.size() > 0) {
+			event.getOperation().addSnapshot(added);
+		}
+		if (removed.size() > 0) {
+			event.getOperation().addSnapshot(removed);
+		}
+		return event;
+	}
+	
+	
+	public static boolean equal(final Object obj1, final Object obj2) {
+	    return obj1 == obj2 || (obj1 != null && obj1.equals(obj2));
 	}
 }

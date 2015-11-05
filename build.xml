@@ -86,10 +86,7 @@
 	<delete file="${src}/overview.html" quiet="true"/>
   </target>
 
-  <target name="tnt4j-examples" depends="doc" description="build package for distribution">
-    <echo message="Deleting old archives" level="info"/>
-    <delete dir="${project-build}" includes="*.jar"/>
-    
+  <target name="tnt4j-examples" depends="doc" description="build package for distribution">   
     <echo message="Copying README and LICENSE info" level="info"/>
 	<copy todir="${project-build}">
       <fileset dir="${root}">

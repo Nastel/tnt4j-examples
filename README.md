@@ -5,11 +5,11 @@ Running Samples
 ===============================================
 * Directory Monitor (`com.nastel.jkool.tnt4j.samples.FolderMonitor`). Monitors a given directory for added, modified, deleted files.
 ```java	
-java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dtnt4j.config=config/tnt4j.properties -Dtnt4j.dump.on.vm.shutdown=true -Dtnt4j.dump.provider.default=true -classpath tnt4j-api-final-all.jar com.nastel.jkool.tnt4j.samples.FolderMonitor /temp
+java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dtnt4j.config=config/tnt4j.properties -Dtnt4j.dump.on.vm.shutdown=true -Dtnt4j.dump.provider.default=true -classpath tnt4j-samples.jar;lib/tnt4j-api-final-all.jar com.nastel.jkool.tnt4j.samples.FolderMonitor /temp
 ```
 * JMX Pinger (`com.nastel.jkool.tnt4j.samples.Pinger`). Monitors a given directory for added, modified, deleted files.
 ```java	
-java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dtnt4j.config=config/tnt4j.properties -Dtnt4j.dump.on.vm.shutdown=true -Dtnt4j.dump.provider.default=true -classpath tnt4j-api-final-all.jar com.nastel.jkool.tnt4j.samples.Pinger
+java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dtnt4j.config=config/tnt4j.properties -Dtnt4j.dump.on.vm.shutdown=true -Dtnt4j.dump.provider.default=true -classpath tnt4j-samples.jar;lib/tnt4j-api-final-all.jar com.nastel.jkool.tnt4j.samples.Pinger
 ```
 
 <b>Command line arguments:</b>
