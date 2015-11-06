@@ -17,6 +17,9 @@ package com.nastel.jkool.tnt4j.samples;
 
 import java.nio.file.WatchEvent;
 
+import com.nastel.jkool.tnt4j.sink.EventSink;
+
 public interface WatchEventHandler<K> {
-	void handleEvent(WatchEvent<K> event); 
+	void handleEvent(WatchEvent<K> event, K root); 
+	EventSink getEventSink();
 }
