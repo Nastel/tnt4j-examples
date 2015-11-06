@@ -17,7 +17,6 @@ package com.nastel.jkool.tnt4j.samples;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.FileSystems;
@@ -51,13 +50,12 @@ import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
  * @version $Revision: 1 $
  */
 public class FolderMonitor {
-	private static final String PROP_FILE_EXT = System.getProperty("tnt4j.folder.monitor.property.ext", ".properties;.conf");
-	
+	private static final String PROP_FILE_EXT = System.getProperty("tnt4j.folder.property.file.ext", ".properties;.conf");	
 	private static final EventSink logger = DefaultEventSinkFactory.defaultEventSink(FolderMonitor.class);
 
 	public static void main(String[] args) throws InterruptedException, IOException {
 		if (args.length < 1) {
-			System.out.println("Usage: folder-list");
+			System.out.println("Usage: folder-watch-list");
 			System.exit(-1);
 		}
 		try {
@@ -74,7 +72,6 @@ public class FolderMonitor {
 }
 
 class PathEventFilter implements SinkEventFilter {
-
 	FolderWatcher watcher;
 
 	PathEventFilter(FolderWatcher fw) {
@@ -103,10 +100,7 @@ class PathEventFilter implements SinkEventFilter {
 					snap.add("UsableSpace", file.getUsableSpace(), ValueTypes.VALUE_TYPE_SIZE_BYTE);
 					snap.add("LastModified", file.lastModified(), ValueTypes.VALUE_TYPE_AGE_MSEC);
 					event.getOperation().addSnapshot(snap);
-					try {
-						watcher.trackPropertyChanges(file, event);
-					} catch (IOException e) {
-					}
+					watcher.trackPropertyChanges(file, event);
 				}
 			}
 		}
@@ -168,14 +162,18 @@ class FolderWatcher implements Runnable {
 		}
 	}
 
-	protected void trackPropertyChanges(File file, TrackingEvent event) throws IOException {
+	protected void trackPropertyChanges(File file, TrackingEvent event) {
 		if (isPropertyFile(file)) {
 			Properties before = PROP_TABLE.get(file.getPath());
-			Properties after = loadPropFile(file);
-			if (before != null && after != null) {
-				compareProperties(file.getPath(), before, after, event);
+			try {
+				Properties after = loadPropFile(file);
+				if (before != null && after != null) {
+					compareProperties(file.getPath(), before, after, event);
+				}
+				PROP_TABLE.put(file.getPath(), after);
+			} catch (IOException e) {
+				logger.error("Cant read: file={0}", file.getPath(), e);									
 			}
-			PROP_TABLE.put(file.getPath(), after);
 		}
 	}
 
@@ -185,8 +183,7 @@ class FolderWatcher implements Runnable {
 			logger.open();
 			loadPropFiles();
 			WatchService watchService = folder.getFileSystem().newWatchService();
-			folder.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY,
-			        StandardWatchEventKinds.ENTRY_DELETE);
+			folder.register(watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY, StandardWatchEventKinds.ENTRY_DELETE);
 			logger.info("Start watching: {0}", folder);
 			while (true) {
 				WatchKey key = watchService.take();
@@ -195,8 +192,7 @@ class FolderWatcher implements Runnable {
 					handleEvent(event);
 				}
 
-				boolean valid = key.reset();
-				if (!valid) {
+				if (!key.reset()) {
 					key.cancel();
 					watchService.close();
 					break;
@@ -214,16 +210,21 @@ class FolderWatcher implements Runnable {
 		}
 	}
 
-	private void loadPropFiles() throws FileNotFoundException, IOException {
+	private void loadPropFiles() {
 		File dir = folder.toFile();
 		if (dir.isDirectory()) {
 			File[] files = dir.listFiles();
 			for (int i = 0; i < files.length; i++) {
 				File file = files[i];
-				Properties prop = loadPropFile(file);
-				if (prop != null) {
-					logger.info("Loaded properties: file={0}, type={1}, prop.count={2}", file.getPath(), Files.probeContentType(file.toPath()), prop.size());
-					PROP_TABLE.put(file.getPath(), prop);
+				try {
+					Properties prop = loadPropFile(file);
+					if (prop != null) {
+						logger.info("Loaded properties: file={0}, type={1}, prop.count={2}", file.getPath(),
+						        Files.probeContentType(file.toPath()), prop.size());
+						PROP_TABLE.put(file.getPath(), prop);
+					}
+				} catch (IOException e) {
+					logger.error("Cant read: file={0}", file.getPath(), e);					
 				}
 			}
 		}
