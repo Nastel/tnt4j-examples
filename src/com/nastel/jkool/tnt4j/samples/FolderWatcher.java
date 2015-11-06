@@ -33,18 +33,18 @@ import java.util.Map;
 
 public class FolderWatcher implements Runnable {
 
-	private final Map<WatchKey, Path> keys;
-	private final boolean recursive;
+	private final Map<WatchKey, Path> watchMap;
 	private final WatchEventHandler<Path> handler;
 	private final Path folder;
 	private WatchService watcher;
+	private final boolean recursive;
 	private boolean verbose = false;
 	
 	FolderWatcher(Path folder, boolean recursive, WatchEventHandler<Path> handler) {
 		this.folder = folder;
 		this.recursive = recursive;
 		this.handler = handler;
-		this.keys = new HashMap<WatchKey, Path>();
+		this.watchMap = new HashMap<WatchKey, Path>();
 	}
 
 	public FolderWatcher load() throws IOException {
@@ -53,7 +53,7 @@ public class FolderWatcher implements Runnable {
 			long begin = System.currentTimeMillis();
 			System.out.format("Scanning path %s ...\n", folder);
 			watchAll(folder);
-			System.out.format("Scanning done, path.count=%d, elapsed.ms=%d\n", keys.size(), (System.currentTimeMillis() - begin));
+			System.out.format("Scanning done, path.count=%d, elapsed.ms=%d\n", watchMap.size(), (System.currentTimeMillis() - begin));
 		} else {
 			watch(folder);
 		}		
@@ -73,7 +73,7 @@ public class FolderWatcher implements Runnable {
 	private void watch(Path folder) throws IOException {
 		WatchKey key = folder.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
 		        StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
-		Path prev = keys.get(key);
+		Path prev = watchMap.get(key);
 		if (verbose) {
 			if (prev == null) {
 				System.out.format("watch path: %s\n", folder);
@@ -83,7 +83,7 @@ public class FolderWatcher implements Runnable {
 				}
 			}
 		}
-		keys.put(key, folder);
+		watchMap.put(key, folder);
 	}
 
 	private void watchAll(final Path start) throws IOException {
@@ -115,7 +115,7 @@ public class FolderWatcher implements Runnable {
 	void go() throws InterruptedException {
 		for (;;) {
 			WatchKey key = watcher.take();
-			Path folder = keys.get(key);
+			Path folder = watchMap.get(key);
 			if (folder == null) {
 				continue;
 			}
@@ -133,8 +133,8 @@ public class FolderWatcher implements Runnable {
 
 			boolean valid = key.reset();
 			if (!valid) {
-				keys.remove(key);
-				if (keys.isEmpty()) {
+				watchMap.remove(key);
+				if (watchMap.isEmpty()) {
 					break;
 				}
 			}

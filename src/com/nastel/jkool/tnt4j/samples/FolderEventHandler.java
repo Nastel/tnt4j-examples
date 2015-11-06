@@ -24,9 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Properties;
-import java.util.concurrent.ConcurrentHashMap;
 
 import com.nastel.jkool.tnt4j.TrackingLogger;
 import com.nastel.jkool.tnt4j.core.OpLevel;
@@ -37,10 +38,18 @@ import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
 
 // Simple class to handle directory events.
 class FolderEventHandler implements WatchEventHandler<Path> {
+	private static final String CONTENTS_CHANGED = "ContentsChanged";
+	private static final String CONTENTS_ADDED = "ContentsAdded";
+	private static final String CONTENTS_REMOVED = "ContentsRemoved";
+	
+	private static final String PATH_CHANGED = "PathModified";
+	private static final String PATH_ADDED = "PathCreated";
+	private static final String PATH_REMOVED = "PathDeleted";
+	
 	private Path folder;
 	TrackingLogger logger;
 	String [] extList;
-	ConcurrentHashMap<String, Properties> PROP_TABLE = new ConcurrentHashMap<String, Properties>();
+	Map<String, Properties> PROP_TABLE = new HashMap<String, Properties>();
 
 	public FolderEventHandler(String name, String exts, Path path, boolean recursive) throws IOException {
 		this.folder = path;
@@ -48,7 +57,7 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		logger = TrackingLogger.getInstance(name);
 		logger.addSinkEventFilter(new PathEventFilter(this));
 		logger.open();
-		loadPropFiles(folder, recursive);
+		loadPropFiles(folder, recursive, PROP_TABLE);
 	}
 
 	private boolean isPropertyFile(File file) {
@@ -72,11 +81,11 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		Kind<Path> kind = event.kind();
 		Path child = root.resolve(event.context());
 		if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
-			logger.tnt(OpLevel.INFO, OpType.ADD, "PathCreated", null, child.toUri().toString(), 0, "Path created: {0}", child);
+			logger.tnt(OpLevel.INFO, OpType.ADD, PATH_ADDED, null, child.toUri().toString(), 0, "Path created: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-			logger.tnt(OpLevel.WARNING, OpType.REMOVE, "PathDeleted", null, child.toUri().toString(), 0, "Path deleted: {0}", child);
+			logger.tnt(OpLevel.WARNING, OpType.REMOVE, PATH_REMOVED, null, child.toUri().toString(), 0, "Path deleted: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
-			logger.tnt(OpLevel.INFO, OpType.UPDATE, "PathModified", null, child.toUri().toString(), 0, "Path changed: {0}", child);
+			logger.tnt(OpLevel.INFO, OpType.UPDATE, PATH_CHANGED, null, child.toUri().toString(), 0, "Path changed: {0}", child);
 		}
 	}
 
@@ -95,21 +104,21 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		}
 	}
 
-	private void loadPropFiles(Path root, boolean recursive) {
+	protected void loadPropFiles(Path root, boolean recursive, Map<String, Properties> map) {
 		File dir = root.toFile();
 		if (dir.isDirectory()) {
 			File[] files = dir.listFiles();
 			for (int i = 0; i < files.length; i++) {
 				File file = files[i];
 				if (recursive && file.isDirectory()) {
-					loadPropFiles(file.toPath(), recursive);
+					loadPropFiles(file.toPath(), recursive, map);
 				} else {
 					try {
 						Properties prop = loadPropFile(file);
 						if (prop != null) {
 							logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file.getPath(),
 							        Files.probeContentType(file.toPath()), prop.size());
-							PROP_TABLE.put(file.getPath(), prop);
+							map.put(file.getPath(), prop);
 						}
 					} catch (Throwable e) {
 						logger.error("Cant read: file={0}", file.getPath(), e);
@@ -119,7 +128,7 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		}
 	}
 
-	private Properties loadPropFile(File file) throws IOException {
+	protected Properties loadPropFile(File file) throws IOException {
 		if (isPropertyFile(file)) {
 			Properties prop = new Properties();
 			InputStream in = new FileInputStream(file);
@@ -131,9 +140,9 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 	}
 
 	private TrackingEvent compareProperties(String fileName, Properties before, Properties after, TrackingEvent event) {
-		PropertySnapshot changes = new PropertySnapshot("ContentsChanged", fileName);
-		PropertySnapshot added = new PropertySnapshot("ContentsAdded", fileName);
-		PropertySnapshot removed = new PropertySnapshot("ContentsRemoved", fileName);
+		PropertySnapshot changes = new PropertySnapshot(CONTENTS_CHANGED, fileName);
+		PropertySnapshot added = new PropertySnapshot(CONTENTS_ADDED, fileName);
+		PropertySnapshot removed = new PropertySnapshot(CONTENTS_REMOVED, fileName);
 
 		HashSet<Object> all = new HashSet<Object>();
 		all.addAll(before.keySet());
