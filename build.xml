@@ -13,6 +13,7 @@
   <property name="docpkg"    value="com.nastel.jkool.tnt4j.samples.*"/>
   <property name="src"       value="src"/>
   <property name="lib"       value="lib"/>
+  <property name="scripts"   value="bin"/>
   <property name="classes"   value="classes"/>
   <property name="doc"       value="${project-build}/doc"/>
   <property name="jar"       value="${project-build}/tnt4j-samples.jar"/>
@@ -95,7 +96,14 @@
       </fileset>
     </copy>
  	
-   <echo message="Copying TNT4J configuration" level="info"/>
+	<echo message="Copying Shell Scrpts" level="info"/>
+	<copy todir="${project-build}/bin">
+		<fileset dir="${scripts}">
+			<include name="**/*.*"/>
+		</fileset>
+	</copy>
+	
+	<echo message="Copying TNT4J configuration" level="info"/>
 	<copy todir="${project-build}/config">
 		<fileset dir="${root}/config">
 			<include name="tnt4j.properties"/>
