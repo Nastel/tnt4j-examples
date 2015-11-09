@@ -48,16 +48,18 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 	
 	private Path folder;
 	TrackingLogger logger;
+	String extListString;
 	String [] extList;
 	Map<String, Properties> PROP_TABLE = new HashMap<String, Properties>();
 
-	public FolderEventHandler(String name, String exts, Path path, boolean recursive) throws IOException {
+	public FolderEventHandler(String name, String exts, Path path, boolean recursive, boolean verbose) throws IOException {
 		this.folder = path;
+		this.extListString = exts;
 		this.extList = exts.split(";");
 		logger = TrackingLogger.getInstance(name);
 		logger.addSinkEventFilter(new PathEventFilter(this));
 		logger.open();
-		loadPropFiles(folder, recursive, PROP_TABLE);
+		loadPropFiles(folder, recursive, verbose, PROP_TABLE);
 	}
 
 	private boolean isPropertyFile(File file) {
@@ -104,26 +106,36 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		}
 	}
 
-	protected void loadPropFiles(Path root, boolean recursive, Map<String, Properties> map) {
+	protected void loadPropFiles(Path root, boolean recursive, boolean verbose, Map<String, Properties> map) {
 		File dir = root.toFile();
+		long count = 0;
 		if (dir.isDirectory()) {
+			long start = System.currentTimeMillis();
+			if (verbose) {
+				System.out.format("Scanning for '%s' in '%s'\n", extListString, dir);
+			}
 			File[] files = dir.listFiles();
 			for (int i = 0; i < files.length; i++) {
 				File file = files[i];
 				if (recursive && file.isDirectory()) {
-					loadPropFiles(file.toPath(), recursive, map);
+					loadPropFiles(file.toPath(), recursive, verbose, map);
 				} else {
 					try {
 						Properties prop = loadPropFile(file);
 						if (prop != null) {
 							logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file.getPath(),
 							        Files.probeContentType(file.toPath()), prop.size());
+							count++;
 							map.put(file.getPath(), prop);
 						}
 					} catch (Throwable e) {
 						logger.error("Cant read: file={0}", file.getPath(), e);
 					}
 				}
+			}
+			if (verbose) {
+				System.out.format("Scanning done, '%s' in '%s', found %d files, elapsed.ms=%d\n", 
+					extListString, dir, count, (System.currentTimeMillis() - start));
 			}
 		}
 	}

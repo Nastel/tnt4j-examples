@@ -56,11 +56,12 @@ public class FolderMonitor {
 				Path pathToWatch = Paths.get(args[i]);				
 				System.out.println("Watch path: " + pathToWatch + ", recursive=" + recursive + ", verbose=" + verbose);
 				FolderEventHandler evHandler = new FolderEventHandler(FolderMonitor.class.getName() + "." + pathToWatch.toFile().getName(),
-						PROP_FILE_EXT, pathToWatch, recursive);
+						PROP_FILE_EXT, pathToWatch, recursive, verbose);
 				FolderWatcher folderWatcher = new FolderWatcher(pathToWatch, recursive, evHandler);
 				Thread monitorThread = new Thread(folderWatcher.setVerbose(verbose).load());
 				monitorThread.start();
 			}
+			System.out.println("Done & Ready :)");
 		} catch (Throwable ex) {
 			logger.log(OpLevel.ERROR, "Unable to watch: {0}", args[0], ex);
 		}
