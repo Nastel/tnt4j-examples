@@ -146,6 +146,8 @@ public class FolderWatcher implements Runnable {
 		try {
 	        go();
         } catch (InterruptedException e) {
+        } finally {
+        	System.out.println("Watcher for " + folder + " stopped");
         }
 	}
 }

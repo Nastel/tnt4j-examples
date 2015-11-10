@@ -28,12 +28,14 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 
 import com.nastel.jkool.tnt4j.TrackingLogger;
 import com.nastel.jkool.tnt4j.core.OpLevel;
 import com.nastel.jkool.tnt4j.core.OpType;
 import com.nastel.jkool.tnt4j.core.PropertySnapshot;
 import com.nastel.jkool.tnt4j.sink.EventSink;
+import com.nastel.jkool.tnt4j.tracker.TimeTracker;
 import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
 
 // Simple class to handle directory events.
@@ -50,12 +52,14 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 	TrackingLogger logger;
 	String extListString;
 	String [] extList;
+	TimeTracker<?> timeTracker;
 	Map<String, Properties> PROP_TABLE = new HashMap<String, Properties>();
 
 	public FolderEventHandler(String name, String exts, Path path, boolean recursive, boolean verbose) throws IOException {
 		this.folder = path;
 		this.extListString = exts;
 		this.extList = exts.split(";");
+		this.timeTracker = TimeTracker.newDefaultTracker(1000, TimeUnit.HOURS.toMillis(24));
 		logger = TrackingLogger.getInstance(name);
 		logger.addSinkEventFilter(new PathEventFilter(this));
 		logger.open();
@@ -82,12 +86,16 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 	public void handleEvent(WatchEvent<Path> event, Path root) {
 		Kind<Path> kind = event.kind();
 		Path child = root.resolve(event.context());
+		String resource = child.toUri().toString();
 		if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
-			logger.tnt(OpLevel.INFO, OpType.ADD, PATH_ADDED, null, child.toUri().toString(), 0, "Path created: {0}", child);
+			logger.tnt(OpLevel.INFO, OpType.ADD, PATH_ADDED, null, resource,
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path created: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
-			logger.tnt(OpLevel.WARNING, OpType.REMOVE, PATH_REMOVED, null, child.toUri().toString(), 0, "Path deleted: {0}", child);
+			logger.tnt(OpLevel.WARNING, OpType.REMOVE, PATH_REMOVED, null, resource,
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path deleted: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
-			logger.tnt(OpLevel.INFO, OpType.UPDATE, PATH_CHANGED, null, child.toUri().toString(), 0, "Path changed: {0}", child);
+			logger.tnt(OpLevel.INFO, OpType.UPDATE, PATH_CHANGED, null, resource, 
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path changed: {0}", child);
 		}
 	}
 
