@@ -89,13 +89,16 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		String resource = child.toUri().toString();
 		if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
 			logger.tnt(OpLevel.INFO, OpType.ADD, PATH_ADDED, null, resource,
-					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path created: {0}", child);
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)),
+					"Path created: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
 			logger.tnt(OpLevel.WARNING, OpType.REMOVE, PATH_REMOVED, null, resource,
-					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path deleted: {0}", child);
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)),
+					"Path deleted: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
 			logger.tnt(OpLevel.INFO, OpType.UPDATE, PATH_CHANGED, null, resource, 
-					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path changed: {0}", child);
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)),
+					"Path changed: {0}", child);
 		}
 	}
 
@@ -109,7 +112,7 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 				}
 				PROP_TABLE.put(file.getPath(), after);
 			} catch (IOException e) {
-				logger.error("Cant read: file={0}", file.getPath(), e);									
+				logger.error("Cant read: file={0}", file.toPath(), e);									
 			}
 		}
 	}
@@ -131,13 +134,13 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 					try {
 						Properties prop = loadPropFile(file);
 						if (prop != null) {
-							logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file.getPath(),
+							logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file.toPath(),
 							        Files.probeContentType(file.toPath()), prop.size());
 							count++;
 							map.put(file.getPath(), prop);
 						}
 					} catch (Throwable e) {
-						logger.error("Cant read: file={0}", file.getPath(), e);
+						logger.error("Cant read: file={0}", file.toPath(), e);
 					}
 				}
 			}
