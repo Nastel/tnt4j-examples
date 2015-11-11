@@ -19,11 +19,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchEvent;
 import java.nio.file.WatchEvent.Kind;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -37,6 +40,7 @@ import com.nastel.jkool.tnt4j.core.PropertySnapshot;
 import com.nastel.jkool.tnt4j.sink.EventSink;
 import com.nastel.jkool.tnt4j.tracker.TimeTracker;
 import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
+import com.nastel.jkool.tnt4j.utils.Utils;
 
 /**
  * Simple class to handle directory events and track file changes.
@@ -44,7 +48,7 @@ import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
  *
  * @version $Revision: 1$
  */
-class FolderEventHandler implements WatchEventHandler<Path> {
+class FolderEventHandler extends SimpleFileVisitor<Path> implements WatchEventHandler<Path> {
 	private static final String CONTENTS_CHANGED = "ContentsChanged";
 	private static final String CONTENTS_ADDED = "ContentsAdded";
 	private static final String CONTENTS_REMOVED = "ContentsRemoved";
@@ -53,22 +57,19 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 	private static final String PATH_ADDED = "PathCreated";
 	private static final String PATH_REMOVED = "PathDeleted";
 	
-	private Path folder;
 	TrackingLogger logger;
 	String extListString;
 	String [] extList;
 	TimeTracker timeTracker;
 	Map<String, Properties> PROP_TABLE = new HashMap<String, Properties>();
 
-	public FolderEventHandler(String name, String exts, Path path, boolean recursive, boolean verbose) throws IOException {
-		this.folder = path;
+	public FolderEventHandler(String name, String exts) throws IOException {
 		this.extListString = exts;
 		this.extList = exts.split(";");
 		this.timeTracker = TimeTracker.newTracker(1000, TimeUnit.DAYS.toMillis(30));
 		logger = TrackingLogger.getInstance(name);
 		logger.addSinkEventFilter(new PathEventFilter(this));
 		logger.open();
-		loadPropFiles(folder, recursive, verbose, PROP_TABLE);
 	}
 
 	private boolean isPropertyFile(File file) {
@@ -122,47 +123,16 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		}
 	}
 
-	protected void loadPropFiles(Path root, boolean recursive, boolean verbose, Map<String, Properties> map) {
-		File dir = root.toFile();
-		long count = 0;
-		if (dir.isDirectory()) {
-			long start = System.currentTimeMillis();
-			if (verbose) {
-				System.out.format("Scanning for '%s' in '%s'\n", extListString, dir);
-			}
-			File[] files = dir.listFiles();
-			for (int i = 0; i < files.length; i++) {
-				File file = files[i];
-				if (recursive && file.isDirectory()) {
-					loadPropFiles(file.toPath(), recursive, verbose, map);
-				} else {
-					try {
-						Properties prop = loadPropFile(file);
-						if (prop != null) {
-							logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file.toPath(),
-							        Files.probeContentType(file.toPath()), prop.size());
-							count++;
-							map.put(file.getPath(), prop);
-						}
-					} catch (Throwable e) {
-						logger.error("Cant read: file={0}", file.toPath(), e);
-					}
-				}
-			}
-			if (verbose) {
-				System.out.format("Scanning done, '%s' in '%s', found %d files, elapsed.ms=%d\n", 
-					extListString, dir, count, (System.currentTimeMillis() - start));
-			}
-		}
-	}
-
 	protected Properties loadPropFile(File file) throws IOException {
 		if (isPropertyFile(file)) {
 			Properties prop = new Properties();
 			InputStream in = new FileInputStream(file);
-			prop.load(in);
-			in.close();
-			return prop;
+			try {
+				prop.load(in);
+				return prop;
+			} finally {
+				Utils.close(in);
+			}
 		}
 		return null;
 	}
@@ -180,7 +150,7 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 			String beforeValue = before.getProperty(key.toString());
 			String afterValue = after.getProperty(key.toString());
 			if (beforeValue != null && afterValue != null) {
-				if (!equal(beforeValue, afterValue)) {
+				if (!Utils.equal(beforeValue, afterValue)) {
 					changes.add(key, beforeValue + "=>" + afterValue);
 				}
 			} else if (beforeValue == null && afterValue != null) {
@@ -202,7 +172,18 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 		return event;
 	}
 
-	public static boolean equal(final Object obj1, final Object obj2) {
-		return obj1 == obj2 || (obj1 != null && obj1.equals(obj2));
-	}
+	@Override
+    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+		try {
+			Properties prop = loadPropFile(file.toFile());
+			if (prop != null) {
+				logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file,
+				        Files.probeContentType(file), prop.size());
+				PROP_TABLE.put(file.toFile().getPath(), prop);
+			}
+		} catch (Throwable e) {
+			logger.error("Cant read: file={0}", file, e);
+		}
+		return FileVisitResult.CONTINUE;
+    }
 }

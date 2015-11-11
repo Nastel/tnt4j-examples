@@ -15,6 +15,7 @@
  */
 package com.nastel.jkool.tnt4j.samples;
 
+import java.nio.file.FileVisitor;
 import java.nio.file.WatchEvent;
 
 import com.nastel.jkool.tnt4j.sink.EventSink;
@@ -24,7 +25,7 @@ import com.nastel.jkool.tnt4j.sink.EventSink;
  *
  * @version $Revision: 1$
  */
-public interface WatchEventHandler<K> {
+public interface WatchEventHandler<K> extends FileVisitor<K> {
 	void handleEvent(WatchEvent<K> event, K root); 
 	EventSink getEventSink();
 }

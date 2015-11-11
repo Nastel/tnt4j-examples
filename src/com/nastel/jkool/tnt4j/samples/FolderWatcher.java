@@ -96,6 +96,11 @@ public class FolderWatcher implements Runnable {
 	private void watchAll(final Path start) throws IOException {
 		Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
 			@Override
+		    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+				handler.visitFile(file, attrs);
+				return FileVisitResult.CONTINUE;			
+			}
+			@Override
 			public FileVisitResult preVisitDirectory(Path folder, BasicFileAttributes attrs) throws IOException {
 				watch(folder);
 				return FileVisitResult.CONTINUE;
