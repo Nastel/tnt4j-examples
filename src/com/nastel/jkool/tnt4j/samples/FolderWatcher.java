@@ -31,6 +31,13 @@ import java.nio.file.attribute.*;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * This class monitors for changes in folders, files and triggers a specified handler {@link WatchEventHandler}.
+ *
+ * @see WatchEventHandler
+ * 
+ * @version $Revision: 1$
+ */
 public class FolderWatcher implements Runnable {
 
 	private final Map<WatchKey, Path> watchMap;

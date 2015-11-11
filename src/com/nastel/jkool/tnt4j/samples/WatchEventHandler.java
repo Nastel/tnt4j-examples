@@ -19,6 +19,11 @@ import java.nio.file.WatchEvent;
 
 import com.nastel.jkool.tnt4j.sink.EventSink;
 
+/**
+ * This interface provides a way to implement folder/file changes
+ *
+ * @version $Revision: 1$
+ */
 public interface WatchEventHandler<K> {
 	void handleEvent(WatchEvent<K> event, K root); 
 	EventSink getEventSink();

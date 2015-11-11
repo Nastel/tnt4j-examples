@@ -28,6 +28,11 @@ import com.nastel.jkool.tnt4j.source.Source;
 import com.nastel.jkool.tnt4j.tracker.TrackingActivity;
 import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
 
+/**
+ * This class provide enrichment of folder/file tracking events
+ *
+ * @version $Revision: 1$
+ */
 public class PathEventFilter implements SinkEventFilter {
 	FolderEventHandler evHandler;
 

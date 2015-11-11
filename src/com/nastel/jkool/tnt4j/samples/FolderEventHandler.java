@@ -38,7 +38,12 @@ import com.nastel.jkool.tnt4j.sink.EventSink;
 import com.nastel.jkool.tnt4j.tracker.TimeTracker;
 import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
 
-// Simple class to handle directory events.
+/**
+ * Simple class to handle directory events and track file changes.
+ * This class also tracks changes within properties and configuration files.
+ *
+ * @version $Revision: 1$
+ */
 class FolderEventHandler implements WatchEventHandler<Path> {
 	private static final String CONTENTS_CHANGED = "ContentsChanged";
 	private static final String CONTENTS_ADDED = "ContentsAdded";
@@ -52,14 +57,14 @@ class FolderEventHandler implements WatchEventHandler<Path> {
 	TrackingLogger logger;
 	String extListString;
 	String [] extList;
-	TimeTracker<?> timeTracker;
+	TimeTracker timeTracker;
 	Map<String, Properties> PROP_TABLE = new HashMap<String, Properties>();
 
 	public FolderEventHandler(String name, String exts, Path path, boolean recursive, boolean verbose) throws IOException {
 		this.folder = path;
 		this.extListString = exts;
 		this.extList = exts.split(";");
-		this.timeTracker = TimeTracker.newDefaultTracker(1000, TimeUnit.HOURS.toMillis(24));
+		this.timeTracker = TimeTracker.newTracker(1000, TimeUnit.DAYS.toMillis(30));
 		logger = TrackingLogger.getInstance(name);
 		logger.addSinkEventFilter(new PathEventFilter(this));
 		logger.open();
