@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nastel.jkool.tnt4j.samples;
+package com.jkoolcloud.tnt4j.samples;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
-import com.nastel.jkool.tnt4j.core.OpLevel;
-import com.nastel.jkool.tnt4j.sink.DefaultEventSinkFactory;
-import com.nastel.jkool.tnt4j.sink.EventSink;
+import com.jkoolcloud.tnt4j.core.OpLevel;
+import com.jkoolcloud.tnt4j.sink.DefaultEventSinkFactory;
+import com.jkoolcloud.tnt4j.sink.EventSink;
 
 /**
  * Simple application that monitors changes to file system folders.

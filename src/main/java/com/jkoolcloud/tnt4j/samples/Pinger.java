@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nastel.jkool.tnt4j.samples;
+package com.jkoolcloud.tnt4j.samples;
 
 import java.io.IOException;
 
-import com.nastel.jkool.tnt4j.ActivityScheduler;
-import com.nastel.jkool.tnt4j.core.Activity;
-import com.nastel.jkool.tnt4j.core.ActivityListener;
-import com.nastel.jkool.tnt4j.core.PropertySnapshot;
+import com.jkoolcloud.tnt4j.ActivityScheduler;
+import com.jkoolcloud.tnt4j.core.Activity;
+import com.jkoolcloud.tnt4j.core.ActivityListener;
+import com.jkoolcloud.tnt4j.core.PropertySnapshot;
 
 /**
  * Simple application that generates an activity ping based on a predefined interval.
