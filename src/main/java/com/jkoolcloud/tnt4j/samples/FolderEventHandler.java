@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nastel.jkool.tnt4j.samples;
+package com.jkoolcloud.tnt4j.samples;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,14 +33,14 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import com.nastel.jkool.tnt4j.TrackingLogger;
-import com.nastel.jkool.tnt4j.core.OpLevel;
-import com.nastel.jkool.tnt4j.core.OpType;
-import com.nastel.jkool.tnt4j.core.PropertySnapshot;
-import com.nastel.jkool.tnt4j.sink.EventSink;
-import com.nastel.jkool.tnt4j.tracker.TimeTracker;
-import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
-import com.nastel.jkool.tnt4j.utils.Utils;
+import com.jkoolcloud.tnt4j.TrackingLogger;
+import com.jkoolcloud.tnt4j.core.OpLevel;
+import com.jkoolcloud.tnt4j.core.OpType;
+import com.jkoolcloud.tnt4j.core.PropertySnapshot;
+import com.jkoolcloud.tnt4j.sink.EventSink;
+import com.jkoolcloud.tnt4j.tracker.TimeTracker;
+import com.jkoolcloud.tnt4j.tracker.TrackingEvent;
+import com.jkoolcloud.tnt4j.utils.Utils;
 
 /**
  * Simple class to handle directory events and track file changes.

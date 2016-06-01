@@ -13,20 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nastel.jkool.tnt4j.samples;
+package com.jkoolcloud.tnt4j.samples;
 
 import java.io.File;
 import java.nio.file.Path;
 
-import com.nastel.jkool.tnt4j.core.OpLevel;
-import com.nastel.jkool.tnt4j.core.PropertySnapshot;
-import com.nastel.jkool.tnt4j.core.Snapshot;
-import com.nastel.jkool.tnt4j.core.ValueTypes;
-import com.nastel.jkool.tnt4j.sink.EventSink;
-import com.nastel.jkool.tnt4j.sink.SinkEventFilter;
-import com.nastel.jkool.tnt4j.source.Source;
-import com.nastel.jkool.tnt4j.tracker.TrackingActivity;
-import com.nastel.jkool.tnt4j.tracker.TrackingEvent;
+import com.jkoolcloud.tnt4j.core.OpLevel;
+import com.jkoolcloud.tnt4j.core.PropertySnapshot;
+import com.jkoolcloud.tnt4j.core.Snapshot;
+import com.jkoolcloud.tnt4j.core.ValueTypes;
+import com.jkoolcloud.tnt4j.sink.EventSink;
+import com.jkoolcloud.tnt4j.sink.SinkEventFilter;
+import com.jkoolcloud.tnt4j.source.Source;
+import com.jkoolcloud.tnt4j.tracker.TrackingActivity;
+import com.jkoolcloud.tnt4j.tracker.TrackingEvent;
 
 /**
  * This class provide enrichment of folder/file tracking events

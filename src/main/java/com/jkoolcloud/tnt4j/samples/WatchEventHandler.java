@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.nastel.jkool.tnt4j.samples;
+package com.jkoolcloud.tnt4j.samples;
 
 import java.nio.file.FileVisitor;
 import java.nio.file.WatchEvent;
 
-import com.nastel.jkool.tnt4j.sink.EventSink;
+import com.jkoolcloud.tnt4j.sink.EventSink;
 
 /**
  * This interface provides a way to implement folder/file changes
