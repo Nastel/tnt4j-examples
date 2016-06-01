@@ -9,8 +9,8 @@
   <!-- Import default properties for jKool builds --> 
   <import file="${root}/build-properties.xml"/>
 
-  <property name="package"   value="com.nastel.jkool.tnt4j.samples.*"/>
-  <property name="docpkg"    value="com.nastel.jkool.tnt4j.samples.*"/>
+  <property name="package"   value="com.jkoolcloud.tnt4j.samples.*"/>
+  <property name="docpkg"    value="com.jkoolcloud.tnt4j.samples.*"/>
   <property name="src"       value="src"/>
   <property name="lib"       value="lib"/>
   <property name="scripts"   value="bin"/>
