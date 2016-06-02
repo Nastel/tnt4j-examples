@@ -13,3 +13,5 @@ hs_err_pid*
 /classes/
 /lib/
 /logs/
+/target/
+/.settings/
