@@ -7,7 +7,7 @@
   <version>2.0</version>
   <packaging>jar</packaging>
 
-  <name>syslogd</name>
+  <name>tnt4j-examples</name>
   <url>http://www.jkoolcloud.com/</url>
   <description>Data Streaming, Data Analytics</description>
   <licenses>
