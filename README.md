@@ -24,3 +24,5 @@ See `config/tnt4j.properties` for TNT4J configuration: factories, formatters, li
 # Project Dependencies
 * JDK 1.7+
 * TNT4J (https://github.com/Nastel/TNT4J)
+
+These examples require TNT4J. You will therefore need to point TNT4J to it's property file via the -Dtnt4j.config argument. This property file is located here in GitHub under the /config directory. If using JCenter or Maven, it can be found in the zip assembly along with the source code and javadoc.
