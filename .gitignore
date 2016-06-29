@@ -15,5 +15,5 @@ hs_err_pid*
 /logs/
 /target/
 /.settings/
-/.project/
-/.classpath/
+.project
+.classpath
