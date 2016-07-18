@@ -3,13 +3,13 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.jkoolcloud.tnt4j</groupId>
-  <artifactId>samples</artifactId>
+  <artifactId>tnt4j-samples</artifactId>
   <version>2.0</version>
   <packaging>jar</packaging>
 
-  <name>tnt4j-examples</name>
+  <name>tnt4j-samples</name>
   <url>http://www.jkoolcloud.com/</url>
-  <description>Data Streaming, Data Analytics</description>
+  <description>Sample TNT4J programs</description>
   <licenses>
   <license>
     <name>The Apache License, Version 2.0</name>
