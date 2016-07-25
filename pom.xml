@@ -109,6 +109,7 @@
                 <descriptor>src/assemblies/deployAssembly.xml</descriptor>
             </descriptors>
             <outputDirectory>${release.deploy.dir}</outputDirectory>
+            <appendAssemblyId>false</appendAssemblyId>
         </configuration>
         <executions>
             <execution>
