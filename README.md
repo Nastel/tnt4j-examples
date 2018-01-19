@@ -12,7 +12,7 @@ java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dtnt4j.config=config/tnt4j.
 java -Dorg.slf4j.simpleLogger.defaultLogLevel=debug -Dtnt4j.config=config/tnt4j.properties -Dtnt4j.dump.on.vm.shutdown=true -Dtnt4j.dump.provider.default=true -classpath tnt4j-samples*.jar;lib/* com.jkoolcloud.tnt4j.samples.Pinger com.nastel.pinger pingActivity 1000
 ```
 
-<b>Command line arguments:</b>
+**Command line arguments:**
 * `-Dorg.slf4j.simpleLogger.defaultLogLevel=debug` -- default logging level for SLF4J simple logger binding.
 * `-Dtnt4j.dump.on.vm.shutdown=true` java property allows application state dumps generated automatically upon VM shutdown.
 * `-Dtnt4j.dump.provider.default=true` java property registers all default dump providers (memory, stack, logging stats).
