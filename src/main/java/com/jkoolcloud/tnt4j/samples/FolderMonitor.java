@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 JKOOL, LLC.
+ * Copyright 2014-2018 JKOOL, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,8 @@ import com.jkoolcloud.tnt4j.sink.EventSink;
  * @version $Revision: 1 $
  */
 public class FolderMonitor {
-	private static final String PROP_FILE_EXT = System.getProperty("tnt4j.folder.property.file.ext", ".properties;.conf");	
+	private static final String PROP_FILE_EXT = System.getProperty("tnt4j.folder.property.file.ext",
+			".properties;.conf");
 	private static final EventSink logger = DefaultEventSinkFactory.defaultEventSink(FolderMonitor.class);
 
 	public static void main(String[] args) throws InterruptedException, IOException {
@@ -53,9 +54,11 @@ public class FolderMonitor {
 					verbose = false;
 					continue;
 				}
-				Path pathToWatch = Paths.get(args[i]);				
-				System.out.println("Watch path: path=" + pathToWatch + ", recursive=" + recursive + ", verbose=" + verbose);
-				FolderEventHandler evHandler = new FolderEventHandler(FolderMonitor.class.getName() + "." + pathToWatch.toFile().getName(), PROP_FILE_EXT);
+				Path pathToWatch = Paths.get(args[i]);
+				System.out.println(
+						"Watch path: path=" + pathToWatch + ", recursive=" + recursive + ", verbose=" + verbose);
+				FolderEventHandler evHandler = new FolderEventHandler(
+						FolderMonitor.class.getName() + "." + pathToWatch.toFile().getName(), PROP_FILE_EXT);
 				FolderWatcher folderWatcher = new FolderWatcher(pathToWatch, recursive, evHandler);
 				Thread monitorThread = new Thread(folderWatcher.setVerbose(verbose).load());
 				monitorThread.start();

@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 JKOOL, LLC.
+ * Copyright 2014-2018 JKOOL, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,7 @@
 package com.jkoolcloud.tnt4j.samples;
 
 /**
- * This class measures clock drift between
- * <code>System.currentTimeMillis()</code> and <code>System.nanoTime()>/code>.
+ * This class measures clock drift between {@link System#currentTimeMillis()} and {@link System#nanoTime()}.
  * 
  * @version $Revision: 1 $
  */
@@ -36,10 +35,8 @@ public class ClockDriftTest {
 			long now = System.nanoTime();
 			long drift = System.currentTimeMillis() - (now / ONEM) - base;
 			long interval = (now - start) / ONEM;
-			System.out.println("Clock drift.ms=" + drift + ", after interval.ms="
-							+ interval + ", change.rate="
-							+ ((double) (drift * 1000) / (double) interval)
-							+ " ms/sec");
+			System.out.println("Clock drift.ms=" + drift + ", after interval.ms=" + interval + ", change.rate="
+					+ ((double) (drift * 1000) / (double) interval) + " ms/sec");
 		}
 	}
 }

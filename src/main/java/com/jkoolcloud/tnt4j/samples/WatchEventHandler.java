@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 JKOOL, LLC.
+ * Copyright 2014-2018 JKOOL, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import com.jkoolcloud.tnt4j.sink.EventSink;
  * @version $Revision: 1$
  */
 public interface WatchEventHandler<K> extends FileVisitor<K> {
-	void handleEvent(WatchEvent<K> event, K root); 
+	void handleEvent(WatchEvent<K> event, K root);
+
 	EventSink getEventSink();
 }

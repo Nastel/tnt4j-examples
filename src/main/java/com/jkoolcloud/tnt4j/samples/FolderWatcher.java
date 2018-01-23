@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 JKOOL, LLC.
+ * Copyright 2014-2018 JKOOL, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,18 +16,9 @@
 package com.jkoolcloud.tnt4j.samples;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.LinkOption;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
+import java.nio.file.*;
 import java.nio.file.WatchEvent.Kind;
-import java.nio.file.WatchKey;
-import java.nio.file.WatchService;
-import java.nio.file.attribute.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,7 +37,7 @@ public class FolderWatcher implements Runnable {
 	private WatchService watcher;
 	private final boolean recursive;
 	private boolean verbose = false;
-	
+
 	FolderWatcher(Path folder, boolean recursive, WatchEventHandler<Path> handler) {
 		this.folder = folder;
 		this.recursive = recursive;
@@ -60,18 +51,19 @@ public class FolderWatcher implements Runnable {
 			long begin = System.currentTimeMillis();
 			System.out.format("Scanning path %s ...\n", folder);
 			watchAll(folder);
-			System.out.format("Scanning done, path.count=%d, elapsed.ms=%d\n", watchMap.size(), (System.currentTimeMillis() - begin));
+			System.out.format("Scanning done, path.count=%d, elapsed.ms=%d\n", watchMap.size(),
+					(System.currentTimeMillis() - begin));
 		} else {
 			watch(folder);
-		}		
+		}
 		return this;
 	}
-	
+
 	public FolderWatcher setVerbose(boolean flag) {
 		verbose = flag;
 		return this;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public static <T> WatchEvent<T> cast(WatchEvent<?> event) {
 		return (WatchEvent<T>) event;
@@ -79,7 +71,7 @@ public class FolderWatcher implements Runnable {
 
 	private void watch(Path folder) throws IOException {
 		WatchKey key = folder.register(watcher, StandardWatchEventKinds.ENTRY_CREATE,
-		        StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
+				StandardWatchEventKinds.ENTRY_DELETE, StandardWatchEventKinds.ENTRY_MODIFY);
 		Path prev = watchMap.get(key);
 		if (verbose) {
 			if (prev == null) {
@@ -93,13 +85,14 @@ public class FolderWatcher implements Runnable {
 		watchMap.put(key, folder);
 	}
 
-	private void watchAll(final Path start) throws IOException {
+	private void watchAll(Path start) throws IOException {
 		Files.walkFileTree(start, new SimpleFileVisitor<Path>() {
 			@Override
-		    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+			public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 				handler.visitFile(file, attrs);
-				return FileVisitResult.CONTINUE;			
+				return FileVisitResult.CONTINUE;
 			}
+
 			@Override
 			public FileVisitResult preVisitDirectory(Path folder, BasicFileAttributes attrs) throws IOException {
 				watch(folder);
@@ -121,9 +114,9 @@ public class FolderWatcher implements Runnable {
 				}
 			} catch (IOException x) {
 			}
-		}		
+		}
 	}
-	
+
 	void go() throws InterruptedException {
 		for (;;) {
 			WatchKey key = watcher.take();
@@ -154,12 +147,12 @@ public class FolderWatcher implements Runnable {
 	}
 
 	@Override
-    public void run() {
+	public void run() {
 		try {
-	        go();
-        } catch (InterruptedException e) {
-        } finally {
-        	System.out.println("Watcher for " + folder + " stopped");
-        }
+			go();
+		} catch (InterruptedException e) {
+		} finally {
+			System.out.println("Watcher for " + folder + " stopped");
+		}
 	}
 }

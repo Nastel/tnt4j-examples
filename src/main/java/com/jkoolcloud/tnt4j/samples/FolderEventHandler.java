@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2015 JKOOL, LLC.
+ * Copyright 2014-2018 JKOOL, LLC.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchEvent;
+import java.nio.file.*;
 import java.nio.file.WatchEvent.Kind;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
@@ -43,8 +38,8 @@ import com.jkoolcloud.tnt4j.tracker.TrackingEvent;
 import com.jkoolcloud.tnt4j.utils.Utils;
 
 /**
- * Simple class to handle directory events and track file changes.
- * This class also tracks changes within properties and configuration files.
+ * Simple class to handle directory events and track file changes. This class also tracks changes within properties and
+ * configuration files.
  *
  * @version $Revision: 1$
  */
@@ -52,14 +47,14 @@ class FolderEventHandler extends SimpleFileVisitor<Path> implements WatchEventHa
 	private static final String CONTENTS_CHANGED = "ContentsChanged";
 	private static final String CONTENTS_ADDED = "ContentsAdded";
 	private static final String CONTENTS_REMOVED = "ContentsRemoved";
-	
+
 	private static final String PATH_CHANGED = "PathModified";
 	private static final String PATH_ADDED = "PathCreated";
 	private static final String PATH_REMOVED = "PathDeleted";
-	
+
 	TrackingLogger logger;
 	String extListString;
-	String [] extList;
+	String[] extList;
 	TimeTracker timeTracker;
 	Map<String, Properties> PROP_TABLE = new HashMap<String, Properties>();
 
@@ -74,20 +69,24 @@ class FolderEventHandler extends SimpleFileVisitor<Path> implements WatchEventHa
 
 	private boolean isPropertyFile(File file) {
 		boolean flag = false;
-		if (!file.isFile()) return flag;
-		
-		for (int i=0; i < extList.length; i++) {
+		if (!file.isFile()) {
+			return flag;
+		}
+
+		for (int i = 0; i < extList.length; i++) {
 			flag = file.getName().endsWith(extList[i]);
-			if (flag) break;
+			if (flag) {
+				break;
+			}
 		}
 		return flag;
 	}
-	
+
 	@Override
 	public EventSink getEventSink() {
 		return logger.getEventSink();
 	}
-	
+
 	@Override
 	public void handleEvent(WatchEvent<Path> event, Path root) {
 		Kind<Path> kind = event.kind();
@@ -95,16 +94,13 @@ class FolderEventHandler extends SimpleFileVisitor<Path> implements WatchEventHa
 		String resource = child.toUri().toString();
 		if (kind.equals(StandardWatchEventKinds.ENTRY_CREATE)) {
 			logger.tnt(OpLevel.INFO, OpType.ADD, PATH_ADDED, null, resource,
-					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)),
-					"Path created: {0}", child);
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path created: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_DELETE)) {
 			logger.tnt(OpLevel.WARNING, OpType.REMOVE, PATH_REMOVED, null, resource,
-					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)),
-					"Path deleted: {0}", child);
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path deleted: {0}", child);
 		} else if (kind.equals(StandardWatchEventKinds.ENTRY_MODIFY)) {
-			logger.tnt(OpLevel.INFO, OpType.UPDATE, PATH_CHANGED, null, resource, 
-					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)),
-					"Path changed: {0}", child);
+			logger.tnt(OpLevel.INFO, OpType.UPDATE, PATH_CHANGED, null, resource,
+					TimeUnit.NANOSECONDS.toMicros(timeTracker.hitAndGet(resource)), "Path changed: {0}", child);
 		}
 	}
 
@@ -118,7 +114,7 @@ class FolderEventHandler extends SimpleFileVisitor<Path> implements WatchEventHa
 				}
 				PROP_TABLE.put(file.getPath(), after);
 			} catch (IOException e) {
-				logger.error("Cant read: file={0}", file.toPath(), e);									
+				logger.error("Cant read: file={0}", file.toPath(), e);
 			}
 		}
 	}
@@ -173,17 +169,17 @@ class FolderEventHandler extends SimpleFileVisitor<Path> implements WatchEventHa
 	}
 
 	@Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
+	public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
 		try {
 			Properties prop = loadPropFile(file.toFile());
 			if (prop != null) {
 				logger.debug("Loaded properties: file={0}, type={1}, prop.count={2}", file,
-				        Files.probeContentType(file), prop.size());
+						Files.probeContentType(file), prop.size());
 				PROP_TABLE.put(file.toFile().getPath(), prop);
 			}
 		} catch (Throwable e) {
 			logger.error("Cant read: file={0}", file, e);
 		}
 		return FileVisitResult.CONTINUE;
-    }
+	}
 }
